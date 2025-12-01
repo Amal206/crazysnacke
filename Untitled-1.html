@@ -2,85 +2,92 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Crazy Snake Madness 2.0</title>
+<title>Crazy Snake Madness 3.0</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: system-ui;
-        color: white;
-    }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    font-family: system-ui;
+    color: white;
+}
 
-    #illusion {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle, #111, #000);
-        animation: waveBackground 6s infinite linear alternate;
-        z-index: -1;
-    }
+#illusion {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, #111, #000);
+    animation: waveBackground 6s infinite linear alternate;
+    z-index: -1;
+}
 
-    @keyframes waveBackground {
-        0% { filter: hue-rotate(0deg) blur(2px); }
-        100% { filter: hue-rotate(360deg) blur(5px); }
-    }
+@keyframes waveBackground {
+    0% { filter: hue-rotate(0deg) blur(2px); }
+    100% { filter: hue-rotate(360deg) blur(5px); }
+}
 
-    #crazyOverlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        z-index: 9999;
-    }
+#crazyOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+    transition: background 0.5s;
+}
 
-    #canvas {
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        border: 3px solid rgba(255,255,255,0.4);
-        box-shadow: 0 0 60px #0ff, 0 0 100px #f0f;
-        margin-bottom: 20px;
-    }
+#canvas {
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255,255,255,0.4);
+    box-shadow: 0 0 60px #0ff, 0 0 100px #f0f;
+    margin-bottom: 20px;
+    transition: border-color 0.5s, box-shadow 0.5s;
+}
 
-    .button {
-        padding: 10px 20px;
-        font-size: 20px;
-        cursor: pointer;
-        border: none;
-        border-radius: 10px;
-        background: linear-gradient(45deg,#0ff,#f0f);
-        color: black;
-        text-shadow: 1px 1px 2px white;
-        transition: all 0.3s ease;
-    }
-    .button:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px #0ff, 0 0 20px #f0f;
-    }
+.button {
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg,#0ff,#f0f);
+    color: black;
+    text-shadow: 1px 1px 2px white;
+    transition: all 0.3s ease;
+}
+.button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px #0ff, 0 0 20px #f0f;
+}
 
-    .gameover {
-        position: absolute;
-        font-size: 50px;
-        color: red;
-        top: 40%;
-        text-align: center;
-        width: 100%;
-        text-shadow: 2px 2px 10px black;
-        display: none;
-        z-index: 10000;
-    }
+.gameover {
+    position: absolute;
+    font-size: 50px;
+    color: red;
+    top: 40%;
+    text-align: center;
+    width: 100%;
+    text-shadow: 2px 2px 10px black;
+    display: none;
+    z-index: 10000;
+    animation: pulse 0.5s infinite alternate;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.3); }
+}
 
-    .shake { animation: shake 0.15s; }
-    @keyframes shake {
-        0% { transform: translate(0); }
-        25% { transform: translate(4px, -4px); }
-        50% { transform: translate(-4px, 4px); }
-        75% { transform: translate(4px, 4px); }
-        100% { transform: translate(0); }
-    }
+.shake { animation: shake 0.15s; }
+@keyframes shake {
+    0% { transform: translate(0); }
+    25% { transform: translate(4px, -4px); }
+    50% { transform: translate(-4px, 4px); }
+    75% { transform: translate(4px, 4px); }
+    100% { transform: translate(0); }
+}
 </style>
 </head>
 <body>
@@ -89,7 +96,7 @@
     <canvas id="canvas" width="600" height="600"></canvas>
     <button class="button" id="startBtn">Start Game</button>
 </div>
-<div class="gameover" id="gameOver">GAME OVER</div>
+<div class="gameover" id="gameOver">💀 CRAZY GAME OVER 💀</div>
 
 <script>
 const overlay = document.getElementById("crazyOverlay");
@@ -110,95 +117,83 @@ let alive = true;
 // Sounds
 const boomSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
 const hahaSound = new Audio("https://www.myinstants.com/media/sounds/evil-laugh.mp3");
+const witchSound = new Audio("https://www.myinstants.com/media/sounds/witch-laugh.mp3");
 const eatSounds = [
     new Audio("https://assets.mixkit.co/active_storage/sfx/2026/2026-preview.mp3"),
     new Audio("https://assets.mixkit.co/active_storage/sfx/171/171-preview.mp3"),
     new Audio("https://assets.mixkit.co/active_storage/sfx/182/182-preview.mp3")
 ];
-boomSound.volume = 0.3;
-hahaSound.volume = 0.2;
-eatSounds.forEach(s => s.volume = 0.3);
+boomSound.volume=0.3; hahaSound.volume=0.2; witchSound.volume=0.2;
+eatSounds.forEach(s=>s.volume=0.3);
 
-// Helper functions
-function randomEatSound() {
-    const sound = eatSounds[Math.floor(Math.random()*eatSounds.length)];
-    sound.play();
-}
+// Random eat sound
+function randomEatSound(){ const sound = eatSounds[Math.floor(Math.random()*eatSounds.length)]; sound.play(); }
+
+// Random witch laugh sometimes
+setInterval(()=>{ if(alive && Math.random()<0.05) witchSound.play(); }, 5000);
 
 // Particle explosion
-function addBoom(x, y, color="magenta") {
-    for (let i=0;i<15;i++){
-        particles.push({
-            x, y,
-            dx: (Math.random()-0.5)*8,
-            dy: (Math.random()-0.5)*8,
-            life: 25,
-            color: color
-        });
+function addBoom(x,y,color="magenta"){
+    for(let i=0;i<15;i++){
+        particles.push({x,y,dx:(Math.random()-0.5)*8,dy:(Math.random()-0.5)*8,life:25,color:color});
     }
     boomSound.play();
 }
-
-// Draw particles
-function drawParticles() {
+function drawParticles(){
     particles.forEach(p=>{
-        ctx.fillStyle = `rgba( ${Math.floor(Math.random()*255)}, ${Math.floor(Math.random()*255)}, 255, ${p.life/25})`;
+        ctx.fillStyle = `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},255,${p.life/25})`;
         ctx.fillRect(p.x,p.y,4,4);
-        p.x += p.dx;
-        p.y += p.dy;
-        p.life--;
+        p.x+=p.dx; p.y+=p.dy; p.life--;
     });
     particles = particles.filter(p=>p.life>0);
 }
 
 // Game init
-function initGame() {
-    snake = [{x:5,y:5},{x:4,y:5}];
-    dir = {x:1, y:0};
+function initGame(){
+    snake=[{x:5,y:5},{x:4,y:5}];
+    dir={x:1,y:0};
     placeFood();
     particles=[];
     alive=true;
     gameOverDiv.style.display="none";
+    overlay.style.background="rgba(0,0,0,0.9)";
+    canvas.style.borderColor="rgba(255,255,255,0.4)";
+    canvas.style.boxShadow="0 0 60px #0ff, 0 0 100px #f0f";
 }
 
-// Food
-function placeFood() {
-    food = {
-        x: Math.floor(Math.random()*COLS),
-        y: Math.floor(Math.random()*ROWS),
-    };
-}
+// Place food
+function placeFood(){ food={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}; }
 
-// Game loop
-function startGame() {
-    initGame();
-    clearInterval(loop);
-    loop = setInterval(step, speed);
-}
+// Start game
+function startGame(){ initGame(); clearInterval(loop); loop=setInterval(step,speed); }
 
 // Step
-function step() {
-    if(!alive) return;
+function step(){ if(!alive) return;
 
-    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
-    head.x = (head.x + COLS)%COLS;
-    head.y = (head.y + ROWS)%ROWS;
-
+    const head={x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+    head.x=(head.x+COLS)%COLS; head.y=(head.y+ROWS)%ROWS;
     snake.unshift(head);
 
-    // Eat food
-    if(head.x === food.x && head.y === food.y){
+    if(head.x===food.x && head.y===food.y){
         addBoom(head.x*TILE, head.y*TILE);
         randomEatSound();
         document.body.classList.add("shake");
         setTimeout(()=>document.body.classList.remove("shake"),200);
+
+        // Change template colors
+        overlay.style.background=`rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},0.8)`;
+        canvas.style.borderColor=`hsl(${Math.random()*360},100%,70%)`;
+        canvas.style.boxShadow=`0 0 80px hsl(${Math.random()*360},100%,70%), 0 0 120px hsl(${Math.random()*360},100%,70%)`;
+
         placeFood();
     } else snake.pop();
 
-    // Self collision
     if(snake.slice(1).some(p=>p.x===head.x && p.y===head.y)){
         alive=false;
         gameOverDiv.style.display="block";
+        addBoom(canvas.width/2,canvas.height/2,"red");
+        overlay.style.background="rgba(255,0,0,0.8)";
+        setTimeout(()=>overlay.style.background="rgba(0,0,0,0.9)",1000);
     }
 
     draw();
@@ -215,22 +210,16 @@ function draw(){
     ctx.arc(food.x*TILE + TILE/2, food.y*TILE + TILE/2, 8 + Math.sin(Date.now()/150)*2, 0, Math.PI*2);
     ctx.fill();
 
-    // Draw snake neon
+    // Snake with glowing aura
     snake.forEach((s,i)=>{
-        const color = `hsl(${(i*30 + Date.now()/10)%360},100%,60%)`;
-        ctx.fillStyle = color;
+        for(let r=3;r>0;r--){
+            ctx.fillStyle=`hsla(${(i*30 + Date.now()/10 + r*50)%360},100%,60%,${0.2})`;
+            ctx.fillRect(s.x*TILE - r, s.y*TILE - r, TILE-2+r*2, TILE-2+r*2);
+        }
+        const color=`hsl(${(i*30 + Date.now()/10)%360},100%,60%)`;
+        ctx.fillStyle=color;
         ctx.fillRect(s.x*TILE, s.y*TILE, TILE-2, TILE-2);
     });
-
-    // Lightning effect
-    ctx.strokeStyle = `hsl(${Date.now()%360},100%,80%)`;
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    for(let i=0;i<5;i++){
-        ctx.moveTo(Math.random()*canvas.width, Math.random()*canvas.height);
-        ctx.lineTo(Math.random()*canvas.width, Math.random()*canvas.height);
-    }
-    ctx.stroke();
 }
 
 // Keyboard
@@ -242,15 +231,8 @@ document.addEventListener("keydown",e=>{
     if(e.key==="ArrowRight" && dir.x!==-1) dir={x:1,y:0};
 });
 
-// Random HAHA
-setInterval(()=>{
-    if(alive) hahaSound.play();
-},6000);
-
 // Start button
-startBtn.addEventListener("click",()=>{
-    startGame();
-});
+startBtn.addEventListener("click",()=>{ startGame(); });
 </script>
 </body>
 </html>
