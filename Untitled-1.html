@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Crazy Snake Madness</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: system-ui;
+        }
+        /* TRIGGER */
+        
+        .trigger {
+            position: fixed;
+            bottom: 6px;
+            right: 6px;
+            width: 25px;
+            height: 25px;
+            opacity: 0;
+            z-index: 99999;
+        }
+        /* Overlay */
+        
+        #crazyOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99998;
+        }
+        
+        #canvas {
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 40px #0ff, 0 0 70px #f0f;
+        }
+        /* floating illusion background */
+        
+        #illusion {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, #111, #000);
+            animation: waveBackground 6s infinite linear alternate;
+            z-index: -1;
+        }
+        
+        @keyframes waveBackground {
+            0% {
+                filter: hue-rotate(0deg) blur(2px);
+            }
+            100% {
+                filter: hue-rotate(360deg) blur(5px);
+            }
+        }
+        /* Screen shake */
+        
+        .shake {
+            animation: shake 0.15s;
+        }
+        
+        @keyframes shake {
+            0% {
+                transform: translate(0);
+            }
+            25% {
+                transform: translate(4px, -4px);
+            }
+            50% {
+                transform: translate(-4px, 4px);
+            }
+            75% {
+                transform: translate(4px, 4px);
+            }
+            100% {
+                transform: translate(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="illusion"></div>
+
+    <div class="trigger" id="secret"></div>
+
+    <div id="crazyOverlay">
+        <canvas id="canvas" width="600" height="600"></canvas>
+    </div>
+
+    <script>
+        /*---------------- TRIGGER ----------------*/
+        const overlay = document.getElementById("crazyOverlay");
+        const secret = document.getElementById("secret");
+
+        window.addEventListener("keydown", e => {
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "s") {
+                overlay.style.display = "flex";
+                startGame();
+            }
+        });
+
+        secret.addEventListener("click", () => {
+            overlay.style.display = "flex";
+            startGame();
+        });
+
+        /*---------------- SOUNDS ----------------*/
+        const boomSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
+        boomSound.volume = 0.3;
+
+        const hahaSound = new Audio("https://www.myinstants.com/media/sounds/evil-laugh.mp3");
+        hahaSound.volume = 0.2;
+
+        // random HAHA every few seconds
+        setInterval(() => {
+            if (overlay.style.display === "flex") hahaSound.play();
+        }, 5000);
+
+        /*---------------- GAME ----------------*/
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const TILE = 20;
+        const COLS = canvas.width / TILE;
+        const ROWS = canvas.height / TILE;
+
+        let snake, dir, food, particles = [];
+        let speed = 120;
+        let loop;
+
+        /* RESET EVERYTHING */
+        function initGame() {
+            snake = [{
+                x: 5,
+                y: 5
+            }, {
+                x: 4,
+                y: 5
+            }];
+            dir = {
+                x: 1,
+                y: 0
+            };
+            placeFood();
+            particles = [];
+        }
+
+        /* RANDOM FOOD */
+        function placeFood() {
+            food = {
+                x: Math.floor(Math.random() * COLS),
+                y: Math.floor(Math.random() * ROWS),
+                pulse: 0
+            };
+        }
+
+        /* ADD PARTICLES (explosion while moving) */
+        function addBoom(x, y) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x,
+                    y,
+                    dx: (Math.random() - 0.5) * 6,
+                    dy: (Math.random() - 0.5) * 6,
+                    life: 20
+                });
+            }
+            boomSound.play();
+        }
+
+        /* DRAW PARTICLES */
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(255, 0, 255, ${p.life / 20})`;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                p.x += p.dx;
+                p.y += p.dy;
+                p.life--;
+            });
+            particles = particles.filter(p => p.life > 0);
+        }
+
+        function startGame() {
+            initGame();
+            clearInterval(loop);
+            loop = setInterval(step, speed);
+        }
+
+        function step() {
+            // Move snake
+            const head = {
+                x: snake[0].x + dir.x,
+                y: snake[0].y + dir.y
+            };
+
+            // Warp
+            head.x = (head.x + COLS) % COLS;
+            head.y = (head.y + ROWS) % ROWS;
+
+            // Add explosion every movement (crazy effect)
+            addBoom(head.x * TILE, head.y * TILE);
+
+            snake.unshift(head);
+
+            // Eat
+            if (head.x === food.x && head.y === food.y) {
+                document.body.classList.add("shake");
+                setTimeout(() => document.body.classList.remove("shake"), 200);
+                placeFood();
+            } else {
+                snake.pop();
+            }
+
+            // Self-hit = reset
+            if (snake.slice(1).some(p => p.x === head.x && p.y === head.y)) {
+                initGame();
+            }
+
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, 600, 600);
+
+            drawParticles();
+
+            // DRAW FOOD (pulsing)
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(
+                food.x * TILE + TILE / 2,
+                food.y * TILE + TILE / 2,
+                8 + Math.sin(Date.now() / 150) * 2,
+                0, Math.PI * 2
+            );
+            ctx.fill();
+
+            // DRAW SNAKE (neon gradient)
+            snake.forEach((s, i) => {
+                const color = `hsl(${(i*20 + Date.now()/20) % 360},100%,60%)`;
+                ctx.fillStyle = color;
+                ctx.fillRect(s.x * TILE, s.y * TILE, TILE - 2, TILE - 2);
+            });
+        }
+
+        /* KEYBOARD */
+        document.addEventListener("keydown", e => {
+            if (overlay.style.display !== "flex") return;
+            if (e.key === "ArrowUp" && dir.y !== 1) dir = {
+                x: 0,
+                y: -1
+            };
+            if (e.key === "ArrowDown" && dir.y !== -1) dir = {
+                x: 0,
+                y: 1
+            };
+            if (e.key === "ArrowLeft" && dir.x !== 1) dir = {
+                x: -1,
+                y: 0
+            };
+            if (e.key === "ArrowRight" && dir.x !== -1) dir = {
+                x: 1,
+                y: 0
+            };
+        });
+    </script>
+
+</body>
+
+</html>
