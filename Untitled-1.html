@@ -98,19 +98,12 @@
     <script>
         /*---------------- TRIGGER ----------------*/
         const overlay = document.getElementById("crazyOverlay");
-        const secret = document.getElementById("secret");
 
-        window.addEventListener("keydown", e => {
-            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "s") {
-                overlay.style.display = "flex";
-                startGame();
-            }
-        });
-
-        secret.addEventListener("click", () => {
+        // Start automatically when page loads
+        window.onload = () => {
             overlay.style.display = "flex";
             startGame();
-        });
+        };
 
         /*---------------- SOUNDS ----------------*/
         const boomSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
@@ -271,6 +264,7 @@
             };
         });
     </script>
+
 
 </body>
 
